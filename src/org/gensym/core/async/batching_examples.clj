@@ -1,4 +1,4 @@
-(ns org.gensyn.core.async.batching-examples
+(ns org.gensym.core.async.batching-examples
   (:require [clojure.core.async :as async :refer :all]
             [clojure.core.async.impl.protocols :as impl]
             [org.gensym.core.async.scheduler :as sched]

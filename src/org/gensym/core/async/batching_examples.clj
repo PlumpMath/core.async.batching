@@ -1,8 +1,8 @@
-(ns core.async-batching
+(ns org.gensyn.core.async.batching-examples
   (:require [clojure.core.async :as async :refer :all]
-           [clojure.core.async.impl.protocols :as impl]
-           [core.scheduler :as sched])
-  (:import [java.util LinkedList]))
+            [clojure.core.async.impl.protocols :as impl]
+            [org.gensym.core.async.scheduler :as sched]
+            [org.gensym.core.async.batching :as gb]))
 
 (def first-ticks [{:ticker "AAPL" :price 41000 :seq 0}
                   {:ticker "GOOG" :price 62000 :seq 0}])
@@ -44,7 +44,7 @@
   (let [tickfn (seqfn (tickseq first-ticks))]
     (sched/make-scheduler #(publish-fn (tickfn)) 0 freq)))
 
-;;(def feed (start-feed println))
+;;(def feed (start-feed println 1000))
 ;;(sched/shutdown feed)
 
 (def tick-channel (chan 1000))
@@ -71,46 +71,28 @@
 
 ;; =============================================
 
-;; First, let's create a channel where we put collections of all the
+;; (sched/shutdown publisher)
+;; (sched/shutdown subscriber)
+
+;; =============================================
+
+;; Let's create a channel where we put collections of all the
 ;; messages that have been published so far.
 
-(deftype BatchingBuffer [items]
-  impl/Buffer
-
-  (full? [this]
-    false)
-
-  (remove! [this]
-    (dosync
-     (let [ret @items]
-       (ref-set items [])
-       ret)))
-
-  (add! [this itm]
-    (dosync (alter items conj itm)))
-
-  clojure.lang.Counted
-  (count [this]
-    (if (empty? @items)
-      0
-      1)))
-
-(defn batching-buffer []
-  (BatchingBuffer. (ref [])))
-
-
-(def batch-tick-channel (chan (batching-buffer)))
-
+(def batch-tick-channel (chan (gb/batching-buffer)))
 (defn start-batch-feed-subscriber [display-fn freq]
   (sched/make-scheduler
    (fn []
-     (println "running")
      (display-fn (<!! (go (<! batch-tick-channel))))) 0 freq))
 
 
 
 (defn start-batch-feed-publisher [freq]
-  (start-feed #(go (>! batch-tick-channel %)) freq))
+ (start-feed #(go (>! batch-tick-channel %)) freq))
 
-(def publisher (start-batch-feed-publisher 100))
-(def batch-subscriber (start-batch-feed-subscriber println 1000))
+;;(def batch-publisher (start-batch-feed-publisher 100))
+;;(def batch-subscriber (start-batch-feed-subscriber println 1000))
+
+;; (sched/shutdown batch-publisher)
+;; (sched/shutdown batch-subscriber)
+

@@ -1,4 +1,4 @@
-(ns core.scheduler
+(ns org.gensym.core.async.scheduler
   (:import [java.util.concurrent ScheduledThreadPoolExecutor TimeUnit]))
 
 (defn make-scheduler [f initial-delay period-milliseconds]

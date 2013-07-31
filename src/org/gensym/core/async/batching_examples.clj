@@ -29,9 +29,9 @@
   (->>  (iterate #(map next-tick %) init-ticks)
         (map (fn [ticks]
                (map (fn [tick] (dissoc tick :dir))
-                    (filter (fn [{dir :dir}]
-                              (not (= :flat dir))) ticks))))
-        (filter #(not (empty? %)))))
+                    (remove (fn [{dir :dir}]
+                              (= :flat dir)) ticks))))
+        (remove #(empty? %))))
 
 (defn seqfn [s]
   (let [a (atom s)]
